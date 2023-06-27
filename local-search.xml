@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>https</title>
+    <link href="/2023/06/27/https/"/>
+    <url>/2023/06/27/https/</url>
+    
+    <content type="html"><![CDATA[<h4 id="https-amp-x20"><a href="#https-amp-x20" class="headerlink" title="https&amp;#x20;"></a>https&amp;#x20;</h4><ol><li><p>https 是 http + SSL&#x2F;TLS&amp;#x20;</p></li><li><p>SSL&#x2F;TLS 处于应用层之下，TCP&#x2F;IP 层之上</p></li><li><p>相关加密算法</p><ol><li><p>hash</p><ol><li>md5</li><li>sha1</li><li>sha256</li></ol></li><li><p>对称加密</p><ol><li>AES</li><li>DES</li></ol></li><li><p>非对称加密</p><ol><li>RSA</li></ol></li></ol></li><li><p>https 请求过程</p><ol><li><p>TCP&#x2F;IP 三次握手之后</p></li><li><p>Client 发送 Client Hello</p><ol><li>随机数 random_C 后续生产会话密钥</li><li>支持的加密套件列表 ECDH+RSA+AES+SHA256 等</li><li>TLS 最高协议 TLS1.0</li><li>压缩方法列表等</li></ol></li><li><p>Server 发送 Server Hello</p><ol><li>随机数 random_S 后续生成会话密钥</li><li>确认加密套件 ECDH+RSA+AES+SHA256<ol><li>ECDH 是协商密钥算法</li><li>RSA 签名使用</li><li>AES 对称加密算法</li><li>SHA256 摘要算法</li></ol></li><li>确认压缩方法</li><li>Server 发送证书 （收到 Client Ack 确认后）</li><li>Server 发送 server Key exchange （如果密钥协商算法是 ECDH 有这一步）<ol><li>生成随机数作为椭圆曲线的私钥</li><li>会把椭圆 G 点和根据服务器私钥生成的公钥发过来</li><li>再用 RSA 签名，防止篡改</li></ol></li><li>Server hello done</li></ol></li><li><p>Client 验证证书</p><ol><li><p>证书包含</p><ol><li>证书内容-&gt; 到期时间、域名、中间证书颁发地址</li><li>通过摘要算法对证书生成hash</li><li>使用证书私钥对 hash 进行数字签名</li></ol></li><li><p>验证</p><ol><li>通过根证书公钥对中间证书验签</li><li>中间证书公钥对证书验签</li><li>检查证书内容</li></ol></li></ol></li><li><p>Client key Exchange 发送给 Server</p><ol><li>生成随机数作为私钥</li><li>根据服务端给的消息，生成公钥</li></ol></li></ol></li></ol>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  
+</search>
