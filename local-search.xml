@@ -8,15 +8,9 @@
     <link href="/2023/06/27/https/"/>
     <url>/2023/06/27/https/</url>
     
-    <content type="html"><![CDATA[<h4 id="https"><a href="#https" class="headerlink" title="https"></a>https</h4><ol><li>https 是 http + SSL&#x2F;TLS</li><li>SSL&#x2F;TLS 处于应用层之下，TCP&#x2F;IP 层之上</li><li>https 请求过程<ol><li>TCP&#x2F;IP 三次握手之后</li><li>Client 发送 Client Hello<ol><li>随机数 random_C 后续生产会话密钥</li><li>支持的加密套件列表 ECDH+RSA+AES+SHA256 等</li><li>TLS 最高协议 TLS1.0</li><li>压缩方法列表等</li></ol></li><li>Server 发送 Server Hello<ol><li>随机数 random_S 后续生成会话密钥</li><li>确认加密套件 ECDH+RSA+AES+SHA256<ol><li>ECDH 是协商密钥算法</li><li>RSA 签名使用</li><li>AES 对称加密算法</li><li>SHA256 摘要算法</li></ol></li><li>确认压缩方法</li><li>Server 发送证书 （收到 Client Ack 确认后）</li><li>Server 发送 server Key exchange （如果密钥协商算法是 ECDH 有这一步）<ol><li>生成随机数作为椭圆曲线的私钥</li><li>会把椭圆 G 点和根据服务器私钥生成的公钥发过来</li><li>再用 RSA 签名，防止篡改</li></ol></li><li>Server hello done</li></ol></li><li>Client 验证证书<ol><li>证书包含<ol><li>证书内容-&gt; 到期时间、域名、中间证书颁发地址</li><li>通过摘要算法对证书生成hash</li><li>使用证书私钥对 hash 进行数字签名</li></ol></li><li>验证<ol><li>通过根证书公钥对中间证书验签</li><li>中间证书公钥对证书验签</li><li>检查证书内容</li></ol></li></ol></li><li>Client key Exchange 发送给 Server<ol><li>生成随机数作为私钥</li><li>根据服务端给的消息，生成公钥</li></ol></li></ol></li></ol><p><img src="/img/https.png" alt="https 交互流程图"></p>]]></content>
+    <content type="html"><![CDATA[<h3 id="https-简述"><a href="#https-简述" class="headerlink" title="https 简述"></a>https 简述</h3><ul><li>http + SSL&#x2F;TLS</li><li>SSL&#x2F;TLS 处于应用层之下，TCP&#x2F;IP 层之上</li></ul><h3 id="https-请求过程"><a href="#https-请求过程" class="headerlink" title="https 请求过程"></a>https 请求过程</h3><pre><code class="hljs">1.  TCP/IP 三次握手之后2.  Client 发送 Client Hello    1.  随机数 random\_C 后续生产会话密钥    2.  支持的加密套件列表 ECDH+RSA+AES+SHA256 等    3.  TLS 最高协议 TLS1.0    4.  压缩方法列表等3.  Server 发送 Server Hello    1.  随机数 random\_S 后续生成会话密钥    2.  确认加密套件 ECDH+RSA+AES+SHA256        1.  ECDH 是协商密钥算法        2.  RSA 签名使用        3.  AES 对称加密算法        4.  SHA256 摘要算法    3.  确认压缩方法    4.  Server 发送证书 （收到 Client Ack 确认后）    5.  Server 发送 server Key exchange （如果密钥协商算法是 ECDH 有这一步）        1.  生成随机数作为椭圆曲线的私钥        2.  会把椭圆 G 点和根据服务器私钥生成的公钥发过来        3.  再用 RSA 签名，防止篡改    6.  Server hello done4.  Client 验证证书    1.  证书包含        1.  证书内容-&gt; 到期时间、域名、中间证书颁发地址        2.  通过摘要算法对证书生成hash        3.  使用证书私钥对 hash 进行数字签名    2.  验证        1.  通过根证书公钥对中间证书验签        2.  中间证书公钥对证书验签        3.  检查证书内容5.  Client key Exchange 发送给 Server    1.  生成随机数作为私钥    2.  根据服务端给的消息，生成公钥</code></pre><p><img src="/img/https.png" alt="https 交互流程图"></p>]]></content>
     
     
-    
-    <tags>
-      
-      <tag>网络</tag>
-      
-    </tags>
     
   </entry>
   
