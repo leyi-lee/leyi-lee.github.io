@@ -1,0 +1,609 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Leyi">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="go mutex">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mutex">
+<meta property="og:url" content="https://leyi-lee.github.io/2023/07/05/mutex/index.html">
+<meta property="og:site_name" content="Leyi 博客">
+<meta property="og:description" content="go mutex">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-07-05T03:20:18.000Z">
+<meta property="article:modified_time" content="2023-07-06T12:37:59.147Z">
+<meta property="article:author" content="Leyi">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>mutex - Leyi 博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"leyi-lee.github.io","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Leyi</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="mutex"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-07-05 11:20" pubdate>
+          2023年7月5日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          55 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">mutex</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="Go-Mutex"><a href="#Go-Mutex" class="headerlink" title="Go Mutex"></a>Go Mutex</h2><p>Mutex 为互斥锁</p>
+<p>分两种模式: <code>正常模式</code>, <code>饥饿模式</code><br><strong>———–</strong></p>
+<p>正常模式: 队列中的goroutine按先入先出排队获取锁，被唤醒的goroutine不会直接持有锁，而是需要和正在运行的goroutine竞争，但其实这个是不公平的，新请求的goroutine正在cpu上运行有优势，如果唤醒的goroutine未获取到锁则直接插入到队列头部，如果等待中的goroutine超过1ms未获取到锁，则直接放到队列头部</p>
+<p>饥饿模式: 新来的groutine不与队列中的竞争，直接放入队尾，如果唤醒的goroutine获取了锁，它是队列最后一个或者等待时长小于1ms则切换回正常模式</p>
+<h3 id="Mutex-结构体"><a href="#Mutex-结构体" class="headerlink" title="Mutex 结构体"></a>Mutex 结构体</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Mutex <span class="hljs-keyword">struct</span> &#123;<br>	state <span class="hljs-type">int32</span><br>	sema  <span class="hljs-type">uint32</span><br>&#125;<br><br><span class="hljs-comment">// google 翻译</span><br><span class="hljs-comment">// 互斥公平性。</span><br><span class="hljs-comment">//</span><br><span class="hljs-comment">// 互斥体可以有两种操作模式：正常模式和饥饿模式。</span><br><span class="hljs-comment">// 在正常模式下，等待者按照 FIFO 顺序排队，但是唤醒等待者不拥有互斥体并与新到达的 goroutine 竞争所有权。 新到来的 goroutine 有一个优势——它们是已经在 CPU 上运行并且可能有很多，所以被唤醒服务员很有可能会输。 在这种情况下，它会排在前面等待队列。 如果服务员未能获取互斥量超过 1ms，它将互斥体切换到饥饿模式。</span><br><span class="hljs-comment">// 在饥饿模式下，互斥量的所有权直接从给队列前面的服务员解锁 goroutine。 新到达的 goroutine 不会尝试获取互斥体，即使它出现解锁，不要尝试旋转。 相反，他们自己排队等待队列的尾部。</span><br><span class="hljs-comment">//</span><br><span class="hljs-comment">// 如果服务员收到互斥体的所有权并看到</span><br><span class="hljs-comment">// (1) 它是队列中的最后一个服务员，或者 (2) 它等待的时间少于 1 毫秒，</span><br><span class="hljs-comment">// 它将互斥体切换回正常操作模式。</span><br><span class="hljs-comment">//</span><br><span class="hljs-comment">// 正常模式具有相当好的性能，因为 goroutine 可以获得</span><br><span class="hljs-comment">// 即使有阻塞的服务员，也可以连续多次使用互斥体。</span><br><span class="hljs-comment">// 饥饿模式对于防止尾部延迟的病态情况很重要。</span><br><br><span class="hljs-keyword">const</span> (<br>	mutexLocked = <span class="hljs-number">1</span> &lt;&lt; <span class="hljs-literal">iota</span> <span class="hljs-comment">// 加锁 001 =&gt; 1 &lt;&lt; 0 = 1</span><br>    mutexWoken <span class="hljs-comment">// 是否唤醒 010 =&gt; 1 &lt;&lt; 1 = 2</span><br>	mutexStarving <span class="hljs-comment">// 是否饥饿模式 100 =&gt; 1 &lt;&lt; 2 = 4</span><br>	mutexWaiterShift = <span class="hljs-literal">iota</span> <span class="hljs-comment">// 3  等待者+1   例如 new + 1 &lt;&lt; mutexWaiterShift = new + 1 &lt;&lt; 3 = new + 8</span><br>	<br>	starvationThresholdNs = <span class="hljs-number">1e6</span> <span class="hljs-comment">// 等待时长</span><br>)<br><br></code></pre></td></tr></table></figure>
+
+<h3 id="Mutex-方法"><a href="#Mutex-方法" class="headerlink" title="Mutex 方法"></a>Mutex 方法</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br></pre></td><td class="code"><pre><code class="hljs go"><br><span class="hljs-keyword">type</span> Locker <span class="hljs-keyword">interface</span> &#123;<br>	Lock()<br>	Unlock()<br>&#125;<br><br><br><span class="hljs-comment">// 锁方法，如果锁已被使用，则调用goroutine阻塞，一直到锁可用</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m *Mutex)</span></span> Lock() &#123;<br>	<span class="hljs-comment">// Fast path: 直接获取到锁 </span><br>	<span class="hljs-keyword">if</span> atomic.CompareAndSwapInt32(&amp;m.state, <span class="hljs-number">0</span>, mutexLocked) &#123;<br>		<span class="hljs-keyword">if</span> race.Enabled &#123;<br>			race.Acquire(unsafe.Pointer(m))<br>		&#125;<br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	<span class="hljs-comment">// Slow path (outlined so that the fast path can be inlined)</span><br>    <span class="hljs-comment">// 慢路径，内联方法(没太懂)</span><br>	m.lockSlow()<br>&#125;<br><br><span class="hljs-comment">// TryLock tries to lock m and reports whether it succeeded.</span><br><span class="hljs-comment">//</span><br><span class="hljs-comment">// Note that while correct uses of TryLock do exist, they are rare,</span><br><span class="hljs-comment">// and use of TryLock is often a sign of a deeper problem</span><br><span class="hljs-comment">// in a particular use of mutexes.</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m *Mutex)</span></span> TryLock() <span class="hljs-type">bool</span> &#123;<br>	old := m.state<br>	<span class="hljs-keyword">if</span> old&amp;(mutexLocked|mutexStarving) != <span class="hljs-number">0</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span><br>	&#125;<br><br>	<span class="hljs-comment">// There may be a goroutine waiting for the mutex, but we are</span><br>	<span class="hljs-comment">// running now and can try to grab the mutex before that</span><br>	<span class="hljs-comment">// goroutine wakes up.</span><br>	<span class="hljs-keyword">if</span> !atomic.CompareAndSwapInt32(&amp;m.state, old, old|mutexLocked) &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span><br>	&#125;<br><br>	<span class="hljs-keyword">if</span> race.Enabled &#123;<br>		race.Acquire(unsafe.Pointer(m))<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m *Mutex)</span></span> lockSlow() &#123;<br>	<span class="hljs-keyword">var</span> waitStartTime <span class="hljs-type">int64</span><br>	starving := <span class="hljs-literal">false</span><br>	awoke := <span class="hljs-literal">false</span><br>	iter := <span class="hljs-number">0</span><br>	old := m.state<br>	<span class="hljs-keyword">for</span> &#123;<br>		<span class="hljs-comment">// Don&#x27;t spin in starvation mode, ownership is handed off to waiters</span><br>		<span class="hljs-comment">// so we won&#x27;t be able to acquire the mutex anyway.</span><br>		<span class="hljs-keyword">if</span> old&amp;(mutexLocked|mutexStarving) == mutexLocked &amp;&amp; runtime_canSpin(iter) &#123;<br>			<span class="hljs-comment">// Active spinning makes sense.</span><br>			<span class="hljs-comment">// Try to set mutexWoken flag to inform Unlock</span><br>			<span class="hljs-comment">// to not wake other blocked goroutines.</span><br>			<span class="hljs-keyword">if</span> !awoke &amp;&amp; old&amp;mutexWoken == <span class="hljs-number">0</span> &amp;&amp; old&gt;&gt;mutexWaiterShift != <span class="hljs-number">0</span> &amp;&amp;<br>				atomic.CompareAndSwapInt32(&amp;m.state, old, old|mutexWoken) &#123;<br>				awoke = <span class="hljs-literal">true</span><br>			&#125;<br>			runtime_doSpin()<br>			iter++<br>			old = m.state<br>			<span class="hljs-keyword">continue</span><br>		&#125;<br>		<span class="hljs-built_in">new</span> := old<br>		<span class="hljs-comment">// Don&#x27;t try to acquire starving mutex, new arriving goroutines must queue.</span><br>		<span class="hljs-keyword">if</span> old&amp;mutexStarving == <span class="hljs-number">0</span> &#123;<br>			<span class="hljs-built_in">new</span> |= mutexLocked<br>		&#125;<br>		<span class="hljs-keyword">if</span> old&amp;(mutexLocked|mutexStarving) != <span class="hljs-number">0</span> &#123;<br>			<span class="hljs-built_in">new</span> += <span class="hljs-number">1</span> &lt;&lt; mutexWaiterShift<br>		&#125;<br>		<span class="hljs-comment">// The current goroutine switches mutex to starvation mode.</span><br>		<span class="hljs-comment">// But if the mutex is currently unlocked, don&#x27;t do the switch.</span><br>		<span class="hljs-comment">// Unlock expects that starving mutex has waiters, which will not</span><br>		<span class="hljs-comment">// be true in this case.</span><br>		<span class="hljs-keyword">if</span> starving &amp;&amp; old&amp;mutexLocked != <span class="hljs-number">0</span> &#123;<br>			<span class="hljs-built_in">new</span> |= mutexStarving<br>		&#125;<br>		<span class="hljs-keyword">if</span> awoke &#123;<br>			<span class="hljs-comment">// The goroutine has been woken from sleep,</span><br>			<span class="hljs-comment">// so we need to reset the flag in either case.</span><br>			<span class="hljs-keyword">if</span> <span class="hljs-built_in">new</span>&amp;mutexWoken == <span class="hljs-number">0</span> &#123;<br>				throw(<span class="hljs-string">&quot;sync: inconsistent mutex state&quot;</span>)<br>			&#125;<br>			<span class="hljs-built_in">new</span> &amp;^= mutexWoken<br>		&#125;<br>		<span class="hljs-keyword">if</span> atomic.CompareAndSwapInt32(&amp;m.state, old, <span class="hljs-built_in">new</span>) &#123;<br>			<span class="hljs-keyword">if</span> old&amp;(mutexLocked|mutexStarving) == <span class="hljs-number">0</span> &#123;<br>				<span class="hljs-keyword">break</span> <span class="hljs-comment">// locked the mutex with CAS</span><br>			&#125;<br>			<span class="hljs-comment">// If we were already waiting before, queue at the front of the queue.</span><br>			queueLifo := waitStartTime != <span class="hljs-number">0</span><br>			<span class="hljs-keyword">if</span> waitStartTime == <span class="hljs-number">0</span> &#123;<br>				waitStartTime = runtime_nanotime()<br>			&#125;<br>			runtime_SemacquireMutex(&amp;m.sema, queueLifo, <span class="hljs-number">1</span>)<br>			starving = starving || runtime_nanotime()-waitStartTime &gt; starvationThresholdNs<br>			old = m.state<br>			<span class="hljs-keyword">if</span> old&amp;mutexStarving != <span class="hljs-number">0</span> &#123;<br>				<span class="hljs-comment">// If this goroutine was woken and mutex is in starvation mode,</span><br>				<span class="hljs-comment">// ownership was handed off to us but mutex is in somewhat</span><br>				<span class="hljs-comment">// inconsistent state: mutexLocked is not set and we are still</span><br>				<span class="hljs-comment">// accounted as waiter. Fix that.</span><br>				<span class="hljs-keyword">if</span> old&amp;(mutexLocked|mutexWoken) != <span class="hljs-number">0</span> || old&gt;&gt;mutexWaiterShift == <span class="hljs-number">0</span> &#123;<br>					throw(<span class="hljs-string">&quot;sync: inconsistent mutex state&quot;</span>)<br>				&#125;<br>				delta := <span class="hljs-type">int32</span>(mutexLocked - <span class="hljs-number">1</span>&lt;&lt;mutexWaiterShift)<br>				<span class="hljs-keyword">if</span> !starving || old&gt;&gt;mutexWaiterShift == <span class="hljs-number">1</span> &#123;<br>					<span class="hljs-comment">// Exit starvation mode.</span><br>					<span class="hljs-comment">// Critical to do it here and consider wait time.</span><br>					<span class="hljs-comment">// Starvation mode is so inefficient, that two goroutines</span><br>					<span class="hljs-comment">// can go lock-step infinitely once they switch mutex</span><br>					<span class="hljs-comment">// to starvation mode.</span><br>					delta -= mutexStarving<br>				&#125;<br>				atomic.AddInt32(&amp;m.state, delta)<br>				<span class="hljs-keyword">break</span><br>			&#125;<br>			awoke = <span class="hljs-literal">true</span><br>			iter = <span class="hljs-number">0</span><br>		&#125; <span class="hljs-keyword">else</span> &#123;<br>			old = m.state<br>		&#125;<br>	&#125;<br><br>	<span class="hljs-keyword">if</span> race.Enabled &#123;<br>		race.Acquire(unsafe.Pointer(m))<br>	&#125;<br>&#125;<br><br><span class="hljs-comment">// Unlock unlocks m.</span><br><span class="hljs-comment">// It is a run-time error if m is not locked on entry to Unlock.</span><br><span class="hljs-comment">//</span><br><span class="hljs-comment">// A locked Mutex is not associated with a particular goroutine.</span><br><span class="hljs-comment">// It is allowed for one goroutine to lock a Mutex and then</span><br><span class="hljs-comment">// arrange for another goroutine to unlock it.</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m *Mutex)</span></span> Unlock() &#123;<br>	<span class="hljs-keyword">if</span> race.Enabled &#123;<br>		_ = m.state<br>		race.Release(unsafe.Pointer(m))<br>	&#125;<br><br>	<span class="hljs-comment">// Fast path: drop lock bit.</span><br>	<span class="hljs-built_in">new</span> := atomic.AddInt32(&amp;m.state, -mutexLocked)<br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">new</span> != <span class="hljs-number">0</span> &#123;<br>		<span class="hljs-comment">// Outlined slow path to allow inlining the fast path.</span><br>		<span class="hljs-comment">// To hide unlockSlow during tracing we skip one extra frame when tracing GoUnblock.</span><br>		m.unlockSlow(<span class="hljs-built_in">new</span>)<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m *Mutex)</span></span> unlockSlow(<span class="hljs-built_in">new</span> <span class="hljs-type">int32</span>) &#123;<br>	<span class="hljs-keyword">if</span> (<span class="hljs-built_in">new</span>+mutexLocked)&amp;mutexLocked == <span class="hljs-number">0</span> &#123;<br>		fatal(<span class="hljs-string">&quot;sync: unlock of unlocked mutex&quot;</span>)<br>	&#125;<br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">new</span>&amp;mutexStarving == <span class="hljs-number">0</span> &#123;<br>		old := <span class="hljs-built_in">new</span><br>		<span class="hljs-keyword">for</span> &#123;<br>			<span class="hljs-comment">// If there are no waiters or a goroutine has already</span><br>			<span class="hljs-comment">// been woken or grabbed the lock, no need to wake anyone.</span><br>			<span class="hljs-comment">// In starvation mode ownership is directly handed off from unlocking</span><br>			<span class="hljs-comment">// goroutine to the next waiter. We are not part of this chain,</span><br>			<span class="hljs-comment">// since we did not observe mutexStarving when we unlocked the mutex above.</span><br>			<span class="hljs-comment">// So get off the way.</span><br>			<span class="hljs-keyword">if</span> old&gt;&gt;mutexWaiterShift == <span class="hljs-number">0</span> || old&amp;(mutexLocked|mutexWoken|mutexStarving) != <span class="hljs-number">0</span> &#123;<br>				<span class="hljs-keyword">return</span><br>			&#125;<br>			<span class="hljs-comment">// Grab the right to wake someone.</span><br>			<span class="hljs-built_in">new</span> = (old - <span class="hljs-number">1</span>&lt;&lt;mutexWaiterShift) | mutexWoken<br>			<span class="hljs-keyword">if</span> atomic.CompareAndSwapInt32(&amp;m.state, old, <span class="hljs-built_in">new</span>) &#123;<br>				runtime_Semrelease(&amp;m.sema, <span class="hljs-literal">false</span>, <span class="hljs-number">1</span>)<br>				<span class="hljs-keyword">return</span><br>			&#125;<br>			old = m.state<br>		&#125;<br>	&#125; <span class="hljs-keyword">else</span> &#123;<br>		<span class="hljs-comment">// Starving mode: handoff mutex ownership to the next waiter, and yield</span><br>		<span class="hljs-comment">// our time slice so that the next waiter can start to run immediately.</span><br>		<span class="hljs-comment">// Note: mutexLocked is not set, the waiter will set it after wakeup.</span><br>		<span class="hljs-comment">// But mutex is still considered locked if mutexStarving is set,</span><br>		<span class="hljs-comment">// so new coming goroutines won&#x27;t acquire it.</span><br>		runtime_Semrelease(&amp;m.sema, <span class="hljs-literal">true</span>, <span class="hljs-number">1</span>)<br>	&#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2023/08/18/channel/" title="channel 源码解析">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">channel 源码解析</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/06/27/https/" title="https 交互详细过程">
+                        <span class="hidden-mobile">https 交互详细过程</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
