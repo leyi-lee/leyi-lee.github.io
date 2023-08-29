@@ -16,15 +16,15 @@
   <meta name="author" content="Leyi">
   <meta name="keywords" content="">
   
-    <meta name="description" content="知识点 多个defer相当于放入一个栈，也就是先进后出，最先入栈的最后执行  deter 和 return 的执行顺序，return 先执行，defer 后执行 函数的返回值初始化 func(i int) (t int) &#x2F;&#x2F; t 会在函数起始会被初始化对应类型的零值并且作用于为整个函数 函数返回值有名，在没有 defer 操作这个返回名和 return 没有区别，无返回值，名">
+    <meta name="description" content="defer 相关知识点">
 <meta property="og:type" content="article">
-<meta property="og:title" content="channel 源码解析">
+<meta property="og:title" content="defer">
 <meta property="og:url" content="https://leyi-lee.github.io/2023/08/28/defer/index.html">
 <meta property="og:site_name" content="Leyi 博客">
-<meta property="og:description" content="知识点 多个defer相当于放入一个栈，也就是先进后出，最先入栈的最后执行  deter 和 return 的执行顺序，return 先执行，defer 后执行 函数的返回值初始化 func(i int) (t int) &#x2F;&#x2F; t 会在函数起始会被初始化对应类型的零值并且作用于为整个函数 函数返回值有名，在没有 defer 操作这个返回名和 return 没有区别，无返回值，名">
+<meta property="og:description" content="defer 相关知识点">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-08-28T01:50:47.000Z">
-<meta property="article:modified_time" content="2023-08-28T07:05:04.884Z">
+<meta property="article:modified_time" content="2023-08-29T10:05:43.303Z">
 <meta property="article:author" content="Leyi">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -32,7 +32,7 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>channel 源码解析 - Leyi 博客</title>
+  <title>defer - Leyi 博客</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -198,7 +198,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="channel 源码解析"></span>
+            <span id="subtitle" data-typed-text="defer"></span>
           
         </div>
 
@@ -270,7 +270,7 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">channel 源码解析</h1>
+            <h1 style="display: none">defer</h1>
             
             
               <div class="markdown-body">
@@ -290,30 +290,7 @@
 
 <h3 id="包含子函数的示例"><a href="#包含子函数的示例" class="headerlink" title="包含子函数的示例"></a>包含子函数的示例</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;fmt&quot;</span><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">function</span><span class="hljs-params">(index <span class="hljs-type">int</span>, value <span class="hljs-type">int</span>)</span></span> <span class="hljs-type">int</span> &#123;<br><br>    fmt.Println(index)<br><br>    <span class="hljs-keyword">return</span> index<br>&#125;<br><br><span class="hljs-comment">// 压栈 要先执行子函数</span><br><span class="hljs-comment">// 3 4 2 1</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>    <span class="hljs-keyword">defer</span> function(<span class="hljs-number">1</span>, function(<span class="hljs-number">3</span>, <span class="hljs-number">0</span>))<br>    <span class="hljs-keyword">defer</span> function(<span class="hljs-number">2</span>, function(<span class="hljs-number">4</span>, <span class="hljs-number">0</span>))<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h4 id="覆盖-panic"><a href="#覆盖-panic" class="headerlink" title="覆盖 panic"></a>覆盖 panic</h4><pre><code class="go">package main
-
-import (
-    &quot;fmt&quot;
-)
-
-func main() &#123;
-
-    defer func() &#123;
-        if err := recover(); err != nil &#123;
-            fmt.Println(err) // 捕获异常 defer panic
-        &#125; else &#123;
-            fmt.Println(&quot;fatal&quot;)
-        &#125;
-    &#125;()
-
-    defer func() &#123;
-        panic(&quot;defer panic&quot;)
-    &#125;()
-
-    panic(&quot;panic&quot;)
-&#125;
-</code></pre>
-
+<h4 id="覆盖-panic"><a href="#覆盖-panic" class="headerlink" title="覆盖 panic"></a>覆盖 panic</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br><br>	<span class="hljs-keyword">defer</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		<span class="hljs-keyword">if</span> err := <span class="hljs-built_in">recover</span>(); err != <span class="hljs-literal">nil</span> &#123;<br>			fmt.Println(err) <span class="hljs-comment">// 捕获异常 defer panic</span><br>		&#125; <span class="hljs-keyword">else</span> &#123;<br>			fmt.Println(<span class="hljs-string">&quot;fatal&quot;</span>)<br>		&#125;<br>	&#125;()<br><br>	<span class="hljs-keyword">defer</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		<span class="hljs-built_in">panic</span>(<span class="hljs-string">&quot;defer panic&quot;</span>)<br>	&#125;()<br><br>	<span class="hljs-built_in">panic</span>(<span class="hljs-string">&quot;panic&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
                 
               </div>
             
