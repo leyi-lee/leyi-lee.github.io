@@ -24,7 +24,7 @@
 <meta property="og:description" content="go mcache mspan mcentral mheap">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-08-31T12:24:47.000Z">
-<meta property="article:modified_time" content="2023-08-31T09:35:04.510Z">
+<meta property="article:modified_time" content="2023-10-19T09:34:42.968Z">
 <meta property="article:author" content="Leyi">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -221,7 +221,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          390 字
+          395 字
         
       </span>
     
@@ -288,13 +288,7 @@
 </blockquote>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> mcache <span class="hljs-keyword">struct</span> &#123;<br>    tiny       <span class="hljs-type">uintptr</span> <span class="hljs-comment">// 分配小对象</span><br>	tinyoffset <span class="hljs-type">uintptr</span><br>	tinyAllocs <span class="hljs-type">uintptr</span><br><br>	alloc [numSpanClasses]*mspan <span class="hljs-comment">// 通过 spanclass 先找到对应 mspan</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h4 id="mcentral-中心缓冲"><a href="#mcentral-中心缓冲" class="headerlink" title="mcentral 中心缓冲"></a>mcentral 中心缓冲</h4><pre><code class="go">type mcentral struct &#123;
-    spanclass spanClass
-
-    partial
-&#125;
-</code></pre>
-
+<h4 id="mcentral-中心缓冲"><a href="#mcentral-中心缓冲" class="headerlink" title="mcentral 中心缓冲"></a>mcentral 中心缓冲</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> mcentral <span class="hljs-keyword">struct</span> &#123;<br>    spanclass spanClass<br><br>    partial<br>&#125;<br></code></pre></td></tr></table></figure>
                 
               </div>
             
